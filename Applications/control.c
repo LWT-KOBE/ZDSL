@@ -12,7 +12,7 @@ controlStruct_t* getcontrolData(){
 }
 
 void congtrolGlobalInit(void){
-	uart1_init(115200);
+	//uart1_init(115200);
 	
 //	uart2_init(9600);//JY60
 //	//uart2_init(115200);

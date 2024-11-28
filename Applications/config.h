@@ -129,34 +129,36 @@ typedef struct{
 }systemConfigPID_t;
 
 typedef struct {
-
-    float configVersion;    
-    //三轴角度环PID
-    systemConfigPID_t yawAnglePID;
-    systemConfigPID_t pitchAnglePID;
-    systemConfigPID_t rollAnglePID;
-    //三轴速度环PID
-    systemConfigPID_t yawRatePID;
-    systemConfigPID_t pitchRatePID;
-
-    formatTrans32Struct_t yawSetting;
-    formatTrans32Struct_t pitchSetting;
 	
-	f32_t				imu_acc_bias_x;
-	f32_t				imu_acc_bias_y;
-	f32_t				imu_acc_bias_z;
 	
-	f32_t				imu_gyo_bias_x;
-	f32_t				imu_gyo_bias_y;
-	f32_t				imu_gyo_bias_z;	
+    float configVersion; 
+	u8 SM_Enable[4];
+//    //三轴角度环PID
+//    systemConfigPID_t yawAnglePID;
+//    systemConfigPID_t pitchAnglePID;
+//    systemConfigPID_t rollAnglePID;
+//    //三轴速度环PID
+//    systemConfigPID_t yawRatePID;
+//    systemConfigPID_t pitchRatePID;
 
-	f32_t				imu_mag_bias_x;
-	f32_t				imu_mag_bias_y;
-	f32_t				imu_mag_bias_z;	
+//    formatTrans32Struct_t yawSetting;
+//    formatTrans32Struct_t pitchSetting;
+//	
+//	f32_t				imu_acc_bias_x;
+//	f32_t				imu_acc_bias_y;
+//	f32_t				imu_acc_bias_z;
+//	
+//	f32_t				imu_gyo_bias_x;
+//	f32_t				imu_gyo_bias_y;
+//	f32_t				imu_gyo_bias_z;	
 
-    float pitchCenter;
-    float yawCenter;
-    float backCenterTime;
+//	f32_t				imu_mag_bias_x;
+//	f32_t				imu_mag_bias_y;
+//	f32_t				imu_mag_bias_z;	
+
+//    float pitchCenter;
+//    float yawCenter;
+//    float backCenterTime;
 } systemConfig_t;
 
 systemConfig_t *getConfigData(void);
@@ -185,6 +187,9 @@ void configTokenStore(configToken_t *token);
 void configLoadDefault(void);
 void configInit(void);
 void erase_configuration(void);
+
+
+extern systemConfig_t  systemConfigData;
 
 #endif
 

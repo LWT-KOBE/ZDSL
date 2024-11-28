@@ -94,6 +94,7 @@ void supervisorFlash(void){
        //检测到需要存入Flash		参数保存提示音
 		//supervisorData.beepState = MUSIC_PARAMCALI;		        
 		configFlashWrite();                                             	//写入flash
+		CONFIG_WriteConfig(&g_SYS_Config);
 		digitalLo(&supervisorData.flashSave);         
         
 	} 	
@@ -107,6 +108,7 @@ void eraseFlash(void){
        //检测到需要存入Flash		参数保存提示音
 		//supervisorData.beepState = MUSIC_PARAMCALI;		        
 		erase_configuration();                                             	//写入flash
+		CONFIG_Default(&g_SYS_Config,1);
 		digitalLo(&supervisorData.eraseflash);         
         
 	} 	
@@ -130,7 +132,7 @@ void supervisorUpdateTask(void *Parameters){
         appSightClass.led(supervisorData.rgbState);                           
         //蜂鸣器正常响起
         //appSightClass.beep(supervisorData.beepState);	      
-		Odrive_CheckDevice();		
+		//Odrive_CheckDevice();		
         //状态清零
         digitalClan(&supervisorData.beepState);	        
 		digitalIncreasing(&supervisorData.loops);
@@ -140,6 +142,6 @@ void supervisorUpdateTask(void *Parameters){
 void supervisorInit(void){
     
 	//蜂鸣器初始化，和LED一起属于监管状态机
-	sightClass.Init();																												
+	//sightClass.Init();																												
 	supervisorData.taskEvent[SUPERVISOR_TASK] = xTaskCreate(supervisorUpdateTask,"SUPE",SPUER_STACK_SIZE,NULL,SPUER_PRIORITY,&supervisorData.xHandleTask);
 }

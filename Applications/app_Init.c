@@ -20,10 +20,10 @@ void appInit(void *Parameters){
 	//无线数传初始化
 	//wirelessInit();
 	//控制初始化
-	controlInit();
+	//controlInit();
 	
 	//小火车控制任务初始化
-	XHCDataInit();
+	//XHCDataInit();
 	
 	//CAN1控制任务初始化
 	CAN1DataInit();

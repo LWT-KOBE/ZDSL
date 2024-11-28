@@ -17,73 +17,18 @@ Library Manager: ArmAr.exe V5.06 update 6 (build 750)
 Hex Converter:   FromElf.exe V5.06 update 6 (build 750)
 CPU DLL:         SARMCM3.DLL V5.31.0.0
 Dialog DLL:      DCM.DLL V1.17.3.0
-Target DLL:      CMSIS_AGDI.dll V1.32.6.0
+Target DLL:      STLink\ST-LINKIII-KEIL_SWO.dll V3.0.7.0
 Dialog DLL:      TCM.DLL V1.46.0.0
  
 <h2>Project:</h2>
-C:\Users\13359\Desktop\odrive_xhc-55\ModularReader.uvprojx
-Project File Date:  10/23/2024
+C:\Users\13359\Desktop\智火项目\自动上料\ModularReader.uvprojx
+Project File Date:  11/22/2024
 
 <h2>Output:</h2>
 *** Using Compiler 'V5.06 update 6 (build 750)', folder: 'D:\ARM\ARMCC\Bin'
 Build target 'ModularReader'
-compiling clockcount.c...
-compiling driver_clockCount.c...
-compiling main.c...
-compiling balance.c...
-Applications\balance.c(121): warning:  #1035-D: single-precision operand implicitly converted to double-precision
-  				if(Motor_SpeedB_Goal.target >= 700.0){
-Applications\balance.c(126): warning:  #1035-D: single-precision operand implicitly converted to double-precision
-  				else if(Motor_SpeedB_Goal.target < 700.0 && Motor_SpeedB_Goal.target >=0){
-Applications\balance.c(197): warning:  #1035-D: single-precision operand implicitly converted to double-precision
-  				if(Motor_SpeedB_Goal.target >= 5000.0){
-Applications\balance.c(202): warning:  #1035-D: single-precision operand implicitly converted to double-precision
-  				else if(Motor_SpeedB_Goal.target < 5000.0 && Motor_SpeedB_Goal.target >=0){
-Applications\balance.c: 4 warnings, 0 errors
-compiling control.c...
-compiling app_Init.c...
-compiling XHC_Task.c...
-compiling supervisor.c...
-compiling pid.c...
-Applications\pid.c(377): warning:  #1035-D: single-precision operand implicitly converted to double-precision
-  	if(Pwm>0.1) Pwm  =  0.1;
-Applications\pid.c(497): warning:  #550-D: variable "dInput"  was set but never used
-      static float Bias,Pwm,Last_Bias,Integral_bias=0,Position_KP,Position_KI,Position_KD,last_dev,this_dev,alpha,last_Input,dInput;
-Applications\pid.c: 2 warnings, 0 errors
-compiling CAN1_Task.c...
-compiling odrive.c...
-Applications\odrive.c(1294): warning:  #111-D: statement is unreachable
-  						break;								
-Applications\odrive.c(1352): warning:  #111-D: statement is unreachable
-  						break;								
-Applications\odrive.c(1412): warning:  #111-D: statement is unreachable
-  						break;								
-Applications\odrive.c(1470): warning:  #111-D: statement is unreachable
-  						break;								
-Applications\odrive.c: 4 warnings, 0 errors
-compiling driver_rgb.c...
-compiling isp_exit.c...
-compiling isp_spi.c...
-compiling driver_lcd.c...
-compiling driver_key.c...
-compiling isp_tim.c...
-compiling encoder.c...
-compiling usartx.c...
-BSP\usartx.c(544): warning:  #550-D: variable "Res"  was set but never used
-  	u8 Res;
-BSP\usartx.c(816): warning:  #188-D: enumerated type mixed with another type
-  				OdriveData.AxisState[0] = 27;
-BSP\usartx.c(1014): warning:  #188-D: enumerated type mixed with another type
-  				OdriveData.AxisState[0] = 27;
-BSP\usartx.c(1242): warning:  #177-D: variable "out"  was declared but never referenced
-  	float out = 0;
-BSP\usartx.c: 4 warnings, 0 errors
-compiling config.c...
-linking...
-Program Size: Code=45540 RO-data=560 RW-data=4220 ZI-data=79160  
-FromELF: creating hex file...
-After Build - User command #1: fromelf --bin -o ".\bin_file\ModularReader.bin" "C:\Users\13359\Desktop\odrive_xhc-55\Objects\ModularReader.axf"
-".\Objects\ModularReader.axf" - 0 Error(s), 14 Warning(s).
+After Build - User command #1: fromelf --bin -o ".\bin_file\ModularReader.bin" "C:\Users\13359\Desktop\智火项目\自动上料\Objects\ModularReader.axf"
+".\Objects\ModularReader.axf" - 0 Error(s), 0 Warning(s).
 
 <h2>Software Packages used:</h2>
 
@@ -97,7 +42,7 @@ Package Vendor: Keil
   D:\Keil\STM32F4xx_DFP\2.12.0\Drivers\CMSIS\Device\ST\STM32F4xx\Include
 
 <h2>Collection of Component Files used:</h2>
-Build Time Elapsed:  00:00:05
+Build Time Elapsed:  00:00:01
 </pre>
 </body>
 </html>

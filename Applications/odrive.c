@@ -158,11 +158,18 @@ void ODSendPos_gainData(CAN_TypeDef *CANx, uint32_t ID_CAN,uint32_t CMD_CAN, uin
 ***************************************************
 */
 void ODSendInputVelData(CAN_TypeDef *CANx, uint32_t ID_CAN,uint32_t CMD_CAN, uint8_t len,OdriveStruct_t* Spetsnaz,uint8_t axis,ODCANSendStruct_t* CanSendData) {
-
+	
+	Spetsnaz->SetCur[axis].float_temp += 0.00001f;
+	
 	CanSendData->data[0] = Spetsnaz->SetVel[axis].u8_temp[0];
 	CanSendData->data[1] = Spetsnaz->SetVel[axis].u8_temp[1];
 	CanSendData->data[2] = Spetsnaz->SetVel[axis].u8_temp[2];
 	CanSendData->data[3] = Spetsnaz->SetVel[axis].u8_temp[3];
+	
+	CanSendData->data[4] = Spetsnaz->SetCur[axis].u8_temp[0];
+	CanSendData->data[5] = Spetsnaz->SetCur[axis].u8_temp[1];
+	CanSendData->data[6] = Spetsnaz->SetCur[axis].u8_temp[2];
+	CanSendData->data[7] = Spetsnaz->SetCur[axis].u8_temp[3];
 	
 
 	OdriveSendData(CANx,ID_CAN,CMD_CAN,len,CanSendData); 
@@ -922,8 +929,10 @@ void driver_can1_init(CAN_TypeDef* rm_canx,BSP_GPIOSource_TypeDef *rm_canx_rx,BS
 		can1.CAN_FilterInitStructure = CAN2_FilterInitStructure;
 	}
 	//1M波特率
-	BSP_CAN_Mode_Init(&can1,CAN_SJW_1tq,CAN_BS2_5tq,CAN_BS1_9tq,3,CAN_Mode_Normal,Preemption,Sub);
+	//BSP_CAN_Mode_Init(&can1,CAN_SJW_1tq,CAN_BS2_5tq,CAN_BS1_9tq,3,CAN_Mode_Normal,Preemption,Sub);
 	
+	//500K波特率
+	BSP_CAN_Mode_Init(&can1,CAN_SJW_1tq,CAN_BS2_5tq,CAN_BS1_9tq,6,CAN_Mode_Normal,Preemption,Sub);
 	//250K波特率
 	//BSP_CAN_Mode_Init(&can1,CAN_SJW_1tq,CAN_BS2_5tq,CAN_BS1_9tq,12,CAN_Mode_Normal,Preemption,Sub);
 	
@@ -1815,11 +1824,11 @@ void odrivelUpdateTask(void *Parameters){
 //							if(flag == 1){
 								
 								if(NFC.flag == 0){
-									ODSendInputVelData(CAN1,AXIS0_ID,MSG_SET_INPUT_VEL,4,&OdriveData,axis0,&ODSendData);
-									ODSendInputVelData(CAN1,AXIS2_ID,MSG_SET_INPUT_VEL,4,&OdriveData,axis0,&ODSendData);
+//									ODSendInputVelData(CAN1,AXIS0_ID,MSG_SET_INPUT_VEL,4,&OdriveData,axis0,&ODSendData);
+//									ODSendInputVelData(CAN1,AXIS2_ID,MSG_SET_INPUT_VEL,4,&OdriveData,axis0,&ODSendData);
 									
-									ODSendInputVelData(CAN2,AXIS0_ID,MSG_SET_INPUT_VEL,4,&OdriveData,axis0,&ODSendData);
-									ODSendInputVelData(CAN2,AXIS2_ID,MSG_SET_INPUT_VEL,4,&OdriveData,axis0,&ODSendData);
+									ODSendInputVelData(CAN2,AXIS0_ID,MSG_SET_INPUT_VEL,8,&OdriveData,axis0,&ODSendData);
+									ODSendInputVelData(CAN2,AXIS2_ID,MSG_SET_INPUT_VEL,8,&OdriveData,axis0,&ODSendData);
 								}
 								NFC.flag++;
 //								ODSendInputVelData(CAN2,AXIS1_ID,MSG_SET_INPUT_VEL,4,&OdriveData,axis1,&ODSendData);
@@ -1867,11 +1876,11 @@ void odrivelUpdateTask(void *Parameters){
 //								if(flag == 1){
 								
 								if(NFC.flag == 2){
-									ODSendInputVelData(CAN1,AXIS1_ID,MSG_SET_INPUT_VEL,4,&OdriveData,axis1,&ODSendData);
-									ODSendInputVelData(CAN1,AXIS3_ID,MSG_SET_INPUT_VEL,4,&OdriveData,axis1,&ODSendData);
+//									ODSendInputVelData(CAN1,AXIS1_ID,MSG_SET_INPUT_VEL,6,&OdriveData,axis1,&ODSendData);
+//									ODSendInputVelData(CAN1,AXIS3_ID,MSG_SET_INPUT_VEL,6,&OdriveData,axis1,&ODSendData);
 									
-									ODSendInputVelData(CAN2,AXIS1_ID,MSG_SET_INPUT_VEL,4,&OdriveData,axis1,&ODSendData);
-									ODSendInputVelData(CAN2,AXIS3_ID,MSG_SET_INPUT_VEL,4,&OdriveData,axis1,&ODSendData);
+									ODSendInputVelData(CAN2,AXIS1_ID,MSG_SET_INPUT_VEL,8,&OdriveData,axis1,&ODSendData);
+									ODSendInputVelData(CAN2,AXIS3_ID,MSG_SET_INPUT_VEL,8,&OdriveData,axis1,&ODSendData);
 									NFC.flag = 0;
 								}
 								
@@ -1934,7 +1943,7 @@ void odrivelUpdateTask(void *Parameters){
 		ODChangePos_gain();
 		
 	}
-        vofa_sendData(OdReceivedData.pos_estimate[0].float_temp,OdReceivedData.pos_estimate[1].float_temp,(OdReceivedData.vel_estimate[0].float_temp * 0.2199f),(OdReceivedData.vel_estimate[1].float_temp * 0.2199f),EW.Current_Mileage,OdReceivedData.ibus[0].float_temp,OdReceivedData.vbus_voltage[0].float_temp,OdReceivedData.Pos_gain[0].float_temp,OdReceivedData.Vel_gain[0].float_temp,OdReceivedData.Vel_integrator_gain[0].float_temp,OdReceivedData.Pos_gain[1].float_temp,OdReceivedData.Vel_gain[1].float_temp,OdReceivedData.Vel_integrator_gain[1].float_temp,Motor_SpeedB_Goal.target);
+        //vofa_sendData(OdReceivedData.pos_estimate[0].float_temp,OdReceivedData.pos_estimate[1].float_temp,(OdReceivedData.vel_estimate[0].float_temp * 0.2199f),(OdReceivedData.vel_estimate[1].float_temp * 0.2199f),EW.Current_Mileage,OdReceivedData.ibus[0].float_temp,OdReceivedData.vbus_voltage[0].float_temp,OdReceivedData.Pos_gain[0].float_temp,OdReceivedData.Vel_gain[0].float_temp,OdReceivedData.Vel_integrator_gain[0].float_temp,OdReceivedData.Pos_gain[1].float_temp,OdReceivedData.Vel_gain[1].float_temp,OdReceivedData.Vel_integrator_gain[1].float_temp,Motor_SpeedB_Goal.target);
 		digitalIncreasing(&OdriveData.loops);        
 
 	}

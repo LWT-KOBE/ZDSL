@@ -34,6 +34,8 @@
 #include "pid.h"
 #include "encoder.h"
 #include "CAN1_Task.h"
+#include "my_flash.h"
+#include "my_config.h"
 #endif
 
 

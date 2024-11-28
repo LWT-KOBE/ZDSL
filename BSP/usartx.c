@@ -770,112 +770,45 @@ void Serial1Data(uint8_t ucData){
 				*/
 			
 			
-			if(strncmp(g_usart1_recv_buf, "V=\n ", 2) == 0)//速度控制命令
+			if(strncmp(g_usart1_recv_buf, "SM1_EN\n ", 6) == 0)//使能电机1
 			{
-				sscanf(g_usart1_recv_buf, "V=%f\n", &OdriveData.SetVel[0].float_temp);//速度修改
-				OdriveData.SetVel[1].float_temp = -OdriveData.SetVel[0].float_temp;
-				flag = 1;
-				//OdriveData.Vel_gain[0].float_temp += 5;
-				//printf("%f\r\n",OdriveData.SetVel[1].float_temp);
-				//sprintf(g_usart1_send_buf, "修改后Angle=%f\r\n", OdriveData.SetVel[0].float_temp);//修改后显示
+				systemConfigData.SM_Enable[0] = 1;
 			}
 			
-			
-			if(strncmp(g_usart1_recv_buf, "P=\n ", 2) == 0)//
+			if(strncmp(g_usart1_recv_buf, "SM2_EN\n ", 6) == 0)//使能电机2
 			{
-				
-				sscanf(g_usart1_recv_buf, "P=%f\n", &OdriveData.SetPos[0].float_temp);//速度修改
-				//sprintf(g_usart1_send_buf, "修改后Angle=%f\r\n", A);//速度限制修改后显示
+				systemConfigData.SM_Enable[1] = 1;
 			}
 			
-			if(strncmp(g_usart1_recv_buf, "Pos\n ", 4) == 0)//
+			if(strncmp(g_usart1_recv_buf, "SM3_EN\n ", 6) == 0)//使能电机3
 			{
-				OdriveData.AxisState[axis0] = CMD_MENU;
-				OdriveData.ControlMode[0] = CONTROL_MODE_POSITION_TRAP;
-	
-				OdriveData.ControlModeFlag = 1;
-				OdriveData.RequestedStateFlag = 1;
-				//sscanf(g_usart1_recv_buf, "P=%f\n", &OdriveData.SetPos[0].float_temp);//速度修改
-				//sprintf(g_usart1_send_buf, "修改后Angle=%f\r\n", A);//速度限制修改后显示
+				systemConfigData.SM_Enable[2] = 1;
 			}
 			
-			if(strncmp(g_usart1_recv_buf, "Vel\n ", 4) == 0)//
+			if(strncmp(g_usart1_recv_buf, "FLASH_SAVE\n ", 10) == 0)//保存配置
 			{
-				
-				OdriveData.AxisState[axis0] = CMD_MENU;
-				OdriveData.ControlMode[0] = CONTROL_MODE_VELOCITY_RAMP;
-	
-				OdriveData.ControlModeFlag = 1;
-				OdriveData.RequestedStateFlag = 1;
-				//sscanf(g_usart1_recv_buf, "P=%f\n", &OdriveData.SetPos[0].float_temp);//速度修改
-				//sprintf(g_usart1_send_buf, "修改后Angle=%f\r\n", A);//速度限制修改后显示
+				supervisorData.flashSave = 1;
+				//NVIC_SystemReset();
 			}
 			
-			if(strncmp(g_usart1_recv_buf, "Set\n ", 4) == 0)//
+			if(strncmp(g_usart1_recv_buf, "ERASE_FLASH\n ", 11) == 0)//恢复出厂设置
 			{
-				OdriveData.AxisState[0] = 27;
-				//OdriveData.AxisState[axis0] = CMD_MOTOR;
-				OdriveData.RequestedStateFlag = 1;
-				//sscanf(g_usart1_recv_buf, "P=%f\n", &OdriveData.SetPos[0].float_temp);//速度修改
-				//sprintf(g_usart1_send_buf, "修改后Angle=%f\r\n", A);//速度限制修改后显示
+				supervisorData.eraseflash = 1;
 			}
 			
-			if(strncmp(g_usart1_recv_buf, "Pos_gain=\n ", 9) == 0)//位置环增益修改
+			if(strncmp(g_usart1_recv_buf, "Rebot\n ", 5) == 0)//重启设备
 			{
-				sscanf(g_usart1_recv_buf, "Pos_gain=%f\n", &OdriveData.Pos_gain[0].float_temp);//增益修改
-				OdriveData.Pos_gain[1].float_temp = OdriveData.Pos_gain[0].float_temp;
-				//增益修改标识符
-				flag = 1;
+				SM.Rebot_flag = 1;
 			}
 			
-			if(strncmp(g_usart1_recv_buf, "Vel_gain=\n ", 9) == 0)//速度环增益修改
+			if(strncmp(g_usart1_recv_buf, "Check_SM\n ", 8) == 0)//重启设备
 			{
-				sscanf(g_usart1_recv_buf, "Vel_gain=%f\n", &OdriveData.Vel_gain[0].float_temp);//增益修改
-				OdriveData.Vel_gain[1].float_temp = OdriveData.Vel_gain[0].float_temp;
-				//增益修改标识符
-				flag = 1;
+				printf("SM1_EN = %d,SM2_EN = %d,SM3_EN = %d\r\n",systemConfigData.SM_Enable[0],systemConfigData.SM_Enable[1],systemConfigData.SM_Enable[2]);
 			}
-			
-			if(strncmp(g_usart1_recv_buf, "Vel_integrator_gain=\n ", 20) == 0)//速度环积分增益修改
-			{
-				sscanf(g_usart1_recv_buf, "Vel_integrator_gain=%f\n", &OdriveData.Vel_integrator_gain[0].float_temp);//增益修改
-				OdriveData.Vel_integrator_gain[1].float_temp = OdriveData.Vel_integrator_gain[0].float_temp;
-				//增益修改标识符
-				flag = 1;
-			}
-			
-			if(strncmp(g_usart1_recv_buf, "OYY=\n ", 4) == 0)//速度控制命令
-			{
-				sscanf(g_usart1_recv_buf, "OYY=%f\n", &Angle_Goal.target);//速度修改
-				Angle_Goal.finish = 0;
-				//OdriveData.Vel_gain[0].float_temp += 5;
-				//printf("%f\r\n",OdriveData.SetVel[1].float_temp);
-				//sprintf(g_usart1_send_buf, "修改后Angle=%f\r\n", OdriveData.SetVel[0].float_temp);//修改后显示
-			}
-			
-			if(strncmp(g_usart1_recv_buf, "MOA=\n ", 4) == 0)//速度控制命令
-			{
-				balanceData.flag = 0;
-				sscanf(g_usart1_recv_buf, "MOA=%f\n", &Motor_SpeedA_Goal.target);//速度修改
-				//OdriveData.Vel_gain[0].float_temp += 5;
-				//printf("%f\r\n",OdriveData.SetVel[1].float_temp);
-				//sprintf(g_usart1_send_buf, "修改后Angle=%f\r\n", OdriveData.SetVel[0].float_temp);//修改后显示
-			}
-			
-			if(strncmp(g_usart1_recv_buf, "MOB=\n ", 4) == 0)//速度控制命令
-			{
-				//balanceData.flag = 1;
-				sscanf(g_usart1_recv_buf, "MOB=%f\n", &Motor_SpeedB_Goal.target);//速度修改
-				//OdriveData.Vel_gain[0].float_temp += 5;
-				//printf("%f\r\n",OdriveData.SetVel[1].float_temp);
-				//sprintf(g_usart1_send_buf, "修改后Angle=%f\r\n", OdriveData.SetVel[0].float_temp);//修改后显示
-			}
-			
 			
 			if(strncmp(g_usart1_recv_buf, "SMV_1=\n ", 6) == 0)//伺服电机1速度控制命令
 			{
 				sscanf(g_usart1_recv_buf, "SMV_1=%d\n", &SM.SetVel[0].s32_temp);//速度修改
-				
 			}
 			
 			if(strncmp(g_usart1_recv_buf, "SMV_2=\n ", 6) == 0)//伺服电机2速度控制命令
@@ -886,7 +819,13 @@ void Serial1Data(uint8_t ucData){
 			
 			if(strncmp(g_usart1_recv_buf, "SMV_3=\n ", 6) == 0)//伺服电机3速度控制命令
 			{
-				sscanf(g_usart1_recv_buf, "SMV_3=%d\n", &SM.SetVel[3].s32_temp);//速度修改
+				sscanf(g_usart1_recv_buf, "SMV_3=%d\n", &SM.SetVel[2].s32_temp);//速度修改
+				
+			}
+			
+			if(strncmp(g_usart1_recv_buf, "MOB=\n ", 4) == 0)//伺服电机3速度控制命令
+			{
+				sscanf(g_usart1_recv_buf, "MOB=%f\n", &Motor_SpeedB_Goal.target);//速度修改
 				
 			}
 			

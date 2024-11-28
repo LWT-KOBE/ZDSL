@@ -829,6 +829,16 @@
               <FileType>1</FileType>
               <FilePath>.\Driver\driver_flash.c</FilePath>
             </File>
+            <File>
+              <FileName>my_config.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\Applications\my_config.c</FilePath>
+            </File>
+            <File>
+              <FileName>my_flash.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\Applications\my_flash.c</FilePath>
+            </File>
           </Files>
         </Group>
         <Group>

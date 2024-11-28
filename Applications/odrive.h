@@ -179,6 +179,7 @@ typedef struct {
 	//电机控制模式
 	ODControlMode control_mode[4];				
 	
+	
 	float motor_phase_resistance[4];//电机电阻值
 	float motor_phase_inductance[4];//电机电感值
 	uint8_t motor_pole_pairs[4];//电机的极对数
@@ -218,6 +219,7 @@ typedef struct {
 	
 	//设定电机的速度——float型	
 	formatTrans32Struct_t SetVel[4];
+	formatTrans32Struct_t Vel_cnt[4];//速度指令计数
 	
 	//设定电机的电流——float型	
 	formatTrans32Struct_t SetCur[4];	

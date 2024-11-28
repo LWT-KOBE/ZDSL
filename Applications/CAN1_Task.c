@@ -2,9 +2,11 @@
 #include "usartx.h"
 #include "board.h"
 CAN1_TaskStruct_t CAN1Data;
-Servo_MotorStruct_t SM;
+Servo_MotorStruct_t SM = {0};
 Servo_MotorDataRecv_t SM_Recv;
 CANSendStruct_t can1data;
+
+u8 TxMessage[13];
 
 /*
 ***************************************************
@@ -565,7 +567,7 @@ void ReadVel_Pos(CanRxMsg* CanRevData,Servo_MotorDataRecv_t* Spetsnaz,uint8_t ax
 	Spetsnaz->pos_estimate[axis].u8_temp[3] = CanRevData->Data[7];
 }
 
-
+//读取电流
 void ReadCur(CanRxMsg* CanRevData,Servo_MotorDataRecv_t* Spetsnaz,uint8_t axis) {
 		
 	
@@ -573,6 +575,12 @@ void ReadCur(CanRxMsg* CanRevData,Servo_MotorDataRecv_t* Spetsnaz,uint8_t axis) 
 	Spetsnaz->Iq_measured[axis].u8_temp[1] = CanRevData->Data[1];
 }
 
+
+//读取CANOpen网络管理
+void Read_NMT(CanRxMsg* CanRevData,Servo_MotorDataRecv_t* Spetsnaz,uint8_t axis){
+	Spetsnaz->NMT[axis].u8_temp[0]	= CanRevData->Data[0];
+	Spetsnaz->NMT[axis].u8_temp[1]	= CanRevData->Data[1];
+}
 
 CAN1_TaskStruct_t* getCAN1_Task(){
     return &CAN1Data;
@@ -586,32 +594,191 @@ void CAN2_TaskGlobalInit(void){
 	//CAN2_Mode_Init(CAN_SJW_1tq,CAN_BS2_5tq,CAN_BS1_9tq,12,CAN_Mode_Normal);
 	//初始化CAN2 波特率1M
 	//CAN2_Mode_Init(CAN_SJW_1tq,CAN_BS2_5tq,CAN_BS1_9tq,3,CAN_Mode_Normal);
+	
+	uart1_init(115200);
 }
+
+void Send_Message(void){
+	//固定帧头
+	TxMessage[0] = 0xaa;
+	TxMessage[1] = 0x55;
+	
+	//数据长度
+	TxMessage[2] = 0x08;
+	
+//	//根据伺服电机使能号决定发送的数据,前3~6位为当前速度,7~8位为NMT回传信号,9~10位为当前电流
+//	if(systemConfigData.SM_Enable[0] != 0){
+//		TxMessage[3] = SM_Recv.vel_estimate[0].u8_temp[0];
+//		TxMessage[4] = SM_Recv.vel_estimate[0].u8_temp[1];
+//		TxMessage[5] = SM_Recv.vel_estimate[0].u8_temp[2];
+//		TxMessage[6] = SM_Recv.vel_estimate[0].u8_temp[3];
+//		
+//		TxMessage[7] = SM_Recv.NMT[0].u8_temp[0];
+//		TxMessage[8] = SM_Recv.NMT[0].u8_temp[1];
+//		TxMessage[9] = SM_Recv.Iq_measured[0].u8_temp[0];
+//		TxMessage[10] = SM_Recv.Iq_measured[0].u8_temp[1];
+//	}
+//	
+//	if(systemConfigData.SM_Enable[1] != 0){
+//		TxMessage[3] = SM_Recv.vel_estimate[1].u8_temp[0];
+//		TxMessage[4] = SM_Recv.vel_estimate[1].u8_temp[1];
+//		TxMessage[5] = SM_Recv.vel_estimate[1].u8_temp[2];
+//		TxMessage[6] = SM_Recv.vel_estimate[1].u8_temp[3];
+//		
+//		TxMessage[7] = SM_Recv.NMT[1].u8_temp[0];
+//		TxMessage[8] = SM_Recv.NMT[1].u8_temp[1];
+//		TxMessage[9] = SM_Recv.Iq_measured[1].u8_temp[0];
+//		TxMessage[10] = SM_Recv.Iq_measured[1].u8_temp[1];
+//	}
+//	
+//	if(systemConfigData.SM_Enable[2] != 0){
+//		TxMessage[3] = SM_Recv.vel_estimate[2].u8_temp[0];
+//		TxMessage[4] = SM_Recv.vel_estimate[2].u8_temp[1];
+//		TxMessage[5] = SM_Recv.vel_estimate[2].u8_temp[2];
+//		TxMessage[6] = SM_Recv.vel_estimate[2].u8_temp[3];
+//		
+//		TxMessage[7] = SM_Recv.NMT[2].u8_temp[0];
+//		TxMessage[8] = SM_Recv.NMT[2].u8_temp[1];
+//		TxMessage[9] = SM_Recv.Iq_measured[2].u8_temp[0];
+//		TxMessage[10] = SM_Recv.Iq_measured[2].u8_temp[1];
+//	}
+	
+	TxMessage[3] = SM_Recv.vel_estimate[1].u8_temp[0];
+	TxMessage[4] = SM_Recv.vel_estimate[1].u8_temp[1];
+	TxMessage[5] = SM_Recv.vel_estimate[1].u8_temp[2];
+	TxMessage[6] = SM_Recv.vel_estimate[1].u8_temp[3];
+	
+	TxMessage[7] = SM_Recv.NMT[1].u8_temp[0];
+	TxMessage[8] = SM_Recv.NMT[1].u8_temp[1];
+	TxMessage[9] = SM_Recv.Iq_measured[1].u8_temp[0];
+	TxMessage[10] = SM_Recv.Iq_measured[1].u8_temp[1];
+	
+	//固定帧尾
+	TxMessage[11] = 0x55;
+	TxMessage[12] = 0xaa;
+	
+	//发送数据
+	u1_SendArray(TxMessage,13);
+	//清空发送数组
+	memset(TxMessage, 0, sizeof(TxMessage));
+}
+
+
+
+//重启自动喷码电机
+void RESET_SM(void){
+	int i = 0;
+	//重启电机1、电机2
+	if(SM.Rebot_flag){                                              						
+//		//config
+		CIA301_Rebot(CAN1,&can1data);
+//		CIA301_Rebot(CAN1,&can1data);
+//		CIA301_Rebot(CAN1,&can1data);
+//		
+//		i++;
+//            //所有控制全部初始化            
+//			//CAN2_TaskGlobalInit();
+//			if(i < 3){
+//				if(systemConfigData.SM_Enable[0] || systemConfigData.SM_Enable[1] || systemConfigData.SM_Enable[2]){
+//					CIA301_Enable(CAN1,&can1data);
+//					CIA301_Enable(CAN1,&can1data);
+//					CIA301_Enable(CAN1,&can1data);
+//				}
+//				
+//				//初始化POD配置，默认回传实时速度与位置
+//				if(systemConfigData.SM_Enable[0])
+//				Set_PDO_Vel_Pos(CAN1,Servo_Motor_ID0,8,&can1data);
+//				if(systemConfigData.SM_Enable[1])
+//				Set_PDO_Vel_Pos(CAN1,Servo_Motor_ID1,8,&can1data);
+//				if(systemConfigData.SM_Enable[2])
+//				Set_PDO_Vel_Pos(CAN1,Servo_Motor_ID2,8,&can1data);
+//				
+//				//初始化PDO配置，默认回传实时力矩与状态字
+//				if(systemConfigData.SM_Enable[0])
+//				Set_PDO_Cur(CAN1,Servo_Motor_ID0,8,&can1data);
+//				if(systemConfigData.SM_Enable[1])
+//				Set_PDO_Cur(CAN1,Servo_Motor_ID1,8,&can1data);
+//				if(systemConfigData.SM_Enable[2])
+//				Set_PDO_Cur(CAN1,Servo_Motor_ID2,8,&can1data);
+//			}
+//			if(i > 3 && i < 6){
+//				//使能电机
+//				Enable(CAN1,Servo_Motor_ID0,8,&can1data);
+//				Enable(CAN1,Servo_Motor_ID1,8,&can1data);
+//				Enable(CAN1,Servo_Motor_ID2,8,&can1data);
+//			}
+//			if(i > 6){
+//				//设置速度模式
+//				if(systemConfigData.SM_Enable[0])
+//				Set_Vel_mode(CAN1,Servo_Motor_ID0,8,&can1data);
+//				if(systemConfigData.SM_Enable[1])
+//				Set_Vel_mode(CAN1,Servo_Motor_ID1,8,&can1data);
+//				if(systemConfigData.SM_Enable[2])
+//				Set_Vel_mode(CAN1,Servo_Motor_ID2,8,&can1data);
+//				
+//				//设置加速度
+//				if(systemConfigData.SM_Enable[0])
+//				CANSendDeceData(CAN1,Servo_Motor_ID0,8,&SM,0,&can1data);
+//				if(systemConfigData.SM_Enable[1])
+//				CANSendDeceData(CAN1,Servo_Motor_ID1,8,&SM,0,&can1data);
+//				if(systemConfigData.SM_Enable[2])
+//				CANSendDeceData(CAN1,Servo_Motor_ID2,8,&SM,0,&can1data);
+//				
+//				//设置减速度
+//				if(systemConfigData.SM_Enable[0])
+//				CANSendAcceData(CAN1,Servo_Motor_ID0,8,&SM,0,&can1data);
+//				if(systemConfigData.SM_Enable[1])
+//				CANSendAcceData(CAN1,Servo_Motor_ID1,8,&SM,0,&can1data);
+//				if(systemConfigData.SM_Enable[2])
+//				CANSendAcceData(CAN1,Servo_Motor_ID2,8,&SM,0,&can1data);
+//				
+//			}
+//			if(i == 9)
+			//SM.Rebot_flag = 0;
+		//digitalLo(&getCAN1_Task()->dataInitFlag);
+		digitalLo(&SM.Rebot_flag);         
+        
+	}
+}
+
 
 void CAN1_TaskUpdateTask(void *Parameters){
 	TickType_t xLastWakeTime = xTaskGetTickCount();
 	digitalLo(&getCAN1_Task()->dataInitFlag);
-	int i = 0;
+	int i = 0,j = 0;
 	while(true){
 		vTaskDelayUntil(&xLastWakeTime,CAN1_Task_NORMAL_PERIOD);
+		//设置伺服电机加速度和减速度
 		SM.Acce[0].s16_temp = 1000;
 		SM.Dece[0].s16_temp = 1000;
+		
+		
         //防止重复初始化
-		if(!CAN1Data.dataInitFlag){
+		if(CAN1Data.dataInitFlag == 0){
 			i++;
             //所有控制全部初始化            
 			CAN2_TaskGlobalInit();
 			if(i < 3){
-				CIA301_Enable(CAN1,&can1data);
-				CIA301_Enable(CAN1,&can1data);
-				CIA301_Enable(CAN1,&can1data);
+				if(systemConfigData.SM_Enable[0] || systemConfigData.SM_Enable[1] || systemConfigData.SM_Enable[2]){
+					CIA301_Enable(CAN1,&can1data);
+					CIA301_Enable(CAN1,&can1data);
+					CIA301_Enable(CAN1,&can1data);
+				}
+				
 				//初始化POD配置，默认回传实时速度与位置
+				if(systemConfigData.SM_Enable[0])
 				Set_PDO_Vel_Pos(CAN1,Servo_Motor_ID0,8,&can1data);
+				if(systemConfigData.SM_Enable[1])
 				Set_PDO_Vel_Pos(CAN1,Servo_Motor_ID1,8,&can1data);
+				if(systemConfigData.SM_Enable[2])
 				Set_PDO_Vel_Pos(CAN1,Servo_Motor_ID2,8,&can1data);
 				
+				//初始化PDO配置，默认回传实时力矩与状态字
+				if(systemConfigData.SM_Enable[0])
 				Set_PDO_Cur(CAN1,Servo_Motor_ID0,8,&can1data);
+				if(systemConfigData.SM_Enable[1])
 				Set_PDO_Cur(CAN1,Servo_Motor_ID1,8,&can1data);
+				if(systemConfigData.SM_Enable[2])
 				Set_PDO_Cur(CAN1,Servo_Motor_ID2,8,&can1data);
 			}
 			if(i > 3 && i < 6){
@@ -622,16 +789,27 @@ void CAN1_TaskUpdateTask(void *Parameters){
 			}
 			if(i > 6){
 				//设置速度模式
+				if(systemConfigData.SM_Enable[0])
 				Set_Vel_mode(CAN1,Servo_Motor_ID0,8,&can1data);
+				if(systemConfigData.SM_Enable[1])
 				Set_Vel_mode(CAN1,Servo_Motor_ID1,8,&can1data);
+				if(systemConfigData.SM_Enable[2])
 				Set_Vel_mode(CAN1,Servo_Motor_ID2,8,&can1data);
+				
 				//设置加速度
+				if(systemConfigData.SM_Enable[0])
 				CANSendDeceData(CAN1,Servo_Motor_ID0,8,&SM,0,&can1data);
+				if(systemConfigData.SM_Enable[1])
 				CANSendDeceData(CAN1,Servo_Motor_ID1,8,&SM,0,&can1data);
+				if(systemConfigData.SM_Enable[2])
 				CANSendDeceData(CAN1,Servo_Motor_ID2,8,&SM,0,&can1data);
+				
 				//设置减速度
+				if(systemConfigData.SM_Enable[0])
 				CANSendAcceData(CAN1,Servo_Motor_ID0,8,&SM,0,&can1data);
+				if(systemConfigData.SM_Enable[1])
 				CANSendAcceData(CAN1,Servo_Motor_ID1,8,&SM,0,&can1data);
+				if(systemConfigData.SM_Enable[2])
 				CANSendAcceData(CAN1,Servo_Motor_ID2,8,&SM,0,&can1data);
 				
 			}
@@ -639,13 +817,103 @@ void CAN1_TaskUpdateTask(void *Parameters){
 			digitalHi(&getCAN1_Task()->dataInitFlag);
 			
 		}
-
+		
+		
+		
+		//发送速度控制指令
+		if(systemConfigData.SM_Enable[0])
 		CANSendInputVelData(CAN1,Servo_Motor_ID0,8,&SM,0,&can1data);
+		if(systemConfigData.SM_Enable[1])
 		CANSendInputVelData(CAN1,Servo_Motor_ID1,8,&SM,1,&can1data);
+		if(systemConfigData.SM_Enable[2])
 		CANSendInputVelData(CAN1,Servo_Motor_ID2,8,&SM,2,&can1data);
 		
+		
+		
+		//100Hz  轮循发送　
+		if(!((CAN1Data.loops + 1) % 50)){	
+			
+			//重启设备
+			RESET_SM();
+			
+			//发送数据
+			Send_Message();
+			
+//			if(SM_Recv.NMT[1].u8_temp[0] == 0x7f){
+//				j++;
+//				i = 0;
+//				if(j >= 8){
+////					digitalLo(&getCAN1_Task()->dataInitFlag);
+//					i++;
+//            //所有控制全部初始化            
+//			CAN2_TaskGlobalInit();
+//			if(i < 3){
+//				if(systemConfigData.SM_Enable[0] || systemConfigData.SM_Enable[1] || systemConfigData.SM_Enable[2]){
+//					CIA301_Enable(CAN1,&can1data);
+//					CIA301_Enable(CAN1,&can1data);
+//					CIA301_Enable(CAN1,&can1data);
+//				}
+//				
+//				//初始化POD配置，默认回传实时速度与位置
+//				if(systemConfigData.SM_Enable[0])
+//				Set_PDO_Vel_Pos(CAN1,Servo_Motor_ID0,8,&can1data);
+//				if(systemConfigData.SM_Enable[1])
+//				Set_PDO_Vel_Pos(CAN1,Servo_Motor_ID1,8,&can1data);
+//				if(systemConfigData.SM_Enable[2])
+//				Set_PDO_Vel_Pos(CAN1,Servo_Motor_ID2,8,&can1data);
+//				
+//				//初始化PDO配置，默认回传实时力矩与状态字
+//				if(systemConfigData.SM_Enable[0])
+//				Set_PDO_Cur(CAN1,Servo_Motor_ID0,8,&can1data);
+//				if(systemConfigData.SM_Enable[1])
+//				Set_PDO_Cur(CAN1,Servo_Motor_ID1,8,&can1data);
+//				if(systemConfigData.SM_Enable[2])
+//				Set_PDO_Cur(CAN1,Servo_Motor_ID2,8,&can1data);
+//			}
+//			if(i > 3 && i < 6){
+//				//使能电机
+//				Enable(CAN1,Servo_Motor_ID0,8,&can1data);
+//				Enable(CAN1,Servo_Motor_ID1,8,&can1data);
+//				Enable(CAN1,Servo_Motor_ID2,8,&can1data);
+//			}
+//			if(i > 6){
+//				//设置速度模式
+//				if(systemConfigData.SM_Enable[0])
+//				Set_Vel_mode(CAN1,Servo_Motor_ID0,8,&can1data);
+//				if(systemConfigData.SM_Enable[1])
+//				Set_Vel_mode(CAN1,Servo_Motor_ID1,8,&can1data);
+//				if(systemConfigData.SM_Enable[2])
+//				Set_Vel_mode(CAN1,Servo_Motor_ID2,8,&can1data);
+//				
+//				//设置加速度
+//				if(systemConfigData.SM_Enable[0])
+//				CANSendDeceData(CAN1,Servo_Motor_ID0,8,&SM,0,&can1data);
+//				if(systemConfigData.SM_Enable[1])
+//				CANSendDeceData(CAN1,Servo_Motor_ID1,8,&SM,0,&can1data);
+//				if(systemConfigData.SM_Enable[2])
+//				CANSendDeceData(CAN1,Servo_Motor_ID2,8,&SM,0,&can1data);
+//				
+//				//设置减速度
+//				if(systemConfigData.SM_Enable[0])
+//				CANSendAcceData(CAN1,Servo_Motor_ID0,8,&SM,0,&can1data);
+//				if(systemConfigData.SM_Enable[1])
+//				CANSendAcceData(CAN1,Servo_Motor_ID1,8,&SM,0,&can1data);
+//				if(systemConfigData.SM_Enable[2])
+//				CANSendAcceData(CAN1,Servo_Motor_ID2,8,&SM,0,&can1data);
+//				
+//			}
+//			if(i == 9)
+//					j = 0;
+//				}
+//			}
+		}
+		
+		
 		digitalIncreasing(&getCAN1_Task()->loops);        
-
+		
+		
+		
+		
 	}
 }
 
@@ -675,6 +943,18 @@ void CAN1_RX0_IRQHandler(void){
 		
 		switch(can1_rx_msg.StdId){
 			
+			//读取CANOPen网络管理节点信号
+			case 1793:
+				Read_NMT(&can1_rx_msg,&SM_Recv,0);
+				break;
+			case 1794:
+				Read_NMT(&can1_rx_msg,&SM_Recv,1);
+				break;
+			case 1795:
+				Read_NMT(&can1_rx_msg,&SM_Recv,2);
+				break;
+			
+			//读取速度和位置
 			case 385:
 				ReadVel_Pos(&can1_rx_msg,&SM_Recv,0);
 			break;
@@ -684,7 +964,8 @@ void CAN1_RX0_IRQHandler(void){
 			case 387:
 				ReadVel_Pos(&can1_rx_msg,&SM_Recv,2);
 			break;							
-				
+			
+			//读取状态字和电流
 			case 641:
 				ReadCur(&can1_rx_msg,&SM_Recv,0);
 			break;
@@ -726,6 +1007,6 @@ void CAN1_TX_IRQHandler(void){
 
 void CAN1DataInit(void){
 	getsupervisorData()->taskEvent[CAN1_Task] = xTaskCreate(CAN1_TaskUpdateTask,"CAN1_Task",CAN1_Task_STACK_SIZE,NULL,CAN1_Task_PRIORITY,&CAN1Data.xHandleTask);
-    //usbVCP_Printf("ControlInit Successfully \r\n");
+    
     
 }

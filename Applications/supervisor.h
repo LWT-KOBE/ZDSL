@@ -13,9 +13,9 @@
 -----------------------------------------------
 ---------------------------------------------*/
 
-#define SPUER_PRIORITY   10
+#define SPUER_PRIORITY   13
 #define SPUER_STACK_SIZE 512
-#define SUPER_STACK_PERIOD 100
+#define SUPER_STACK_PERIOD 5
 
 enum {
 	IMU_TASK = 0,
@@ -109,7 +109,7 @@ typedef struct {
 } supervisorStruct_t;
 
 supervisorStruct_t* getsupervisorData(void);
-
+extern supervisorStruct_t supervisorData;
 void supervisorInit(void);
 void shootCheckDevice(void);
 void supervisrCheckModule(void);

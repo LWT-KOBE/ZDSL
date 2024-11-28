@@ -24,6 +24,11 @@ typedef struct {
 
 typedef struct {
 	
+	u8 Reset_flag;		//重置flash
+	
+	u8 Rebot_flag;		//重启设备
+	
+	u8 Flash_SaveFlag;	//保存配置
 	//设定电机的位置——float型
 	formatTrans32Struct_t SetPos[4];
 	
@@ -38,11 +43,15 @@ typedef struct {
 	
 	//设定电机的速度减速度
 	formatTrans16Struct_t Dece[4];
+	
+	uint32_t loops;
 } Servo_MotorStruct_t;
 
 
 /*Odrive 的CAN接收结构体*/
-typedef struct {   
+typedef struct {
+	
+	uint8_t current_presence[4];		//电流存在
 
 	formatTrans16Struct_t Iq_measured[4];//电流
 	
@@ -56,6 +65,8 @@ typedef struct {
 	formatTrans32Struct_t current_limit[4];//电流限制——接收
 	formatTrans32Struct_t Target_Torque[4];//目标力矩
 	formatTrans32Struct_t Torque_Slope[4];//力矩斜率
+	formatTrans32Struct_t NMT[4];//CANOPen网络管理
+	
 
 }Servo_MotorDataRecv_t;
 
